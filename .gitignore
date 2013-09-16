@@ -1,0 +1,7 @@
+# Files for git to ignore
+
+# emacs recent files
+.recentf
+
+# emacs backups
+*~
