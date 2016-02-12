@@ -89,7 +89,10 @@ It then indents the markup by using nxml's indentation rules."
 ;; Set IPython interpreter
 (defvar python-shell-interpreter "ipython")
 (defvar python-shell-interpreter-args "-i")
-
+(add-hook 'inferior-python-mode-hook (lambda ()
+                                       (progn
+                                         (python-shell-send-string-no-output "%load_ext autoreload")
+                                         (python-shell-send-string-no-output "%autoreload 2"))))
 
 (defun python-send-buffer-args (args)
   "Run Python script with ARGS as arguments."
