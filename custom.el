@@ -8,8 +8,8 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
+ '(desktop-save-mode t)
  '(fill-column 80)
- '(initial-buffer-choice "C:\\code")
  '(scroll-bar-mode nil))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
@@ -34,6 +34,20 @@
 
 ;; Tail (refresh) log files automatically
 (add-to-list 'auto-mode-alist '("\\.log\\'" . auto-revert-mode))
+
+
+(defun comment-or-uncomment-region-or-line ()
+  "Comment or uncomment the region or the current line if there's no active region."
+  (interactive)
+  (let (beg end)
+    (if (region-active-p)
+        (setq beg (region-beginning) end (region-end))
+      (setq beg (line-beginning-position) end (line-end-position)))
+    (comment-or-uncomment-region beg end)
+    (forward-line)))
+
+;; Rebind comment-dwim to comment-or-uncomment-region-or-line
+(global-set-key "\M-;" 'comment-or-uncomment-region-or-line)
 
 
 (defun save-macro (name)
@@ -87,12 +101,38 @@ It then indents the markup by using nxml's indentation rules."
 
 
 ;; Set IPython interpreter
+(require 'python)
 (defvar python-shell-interpreter "ipython")
 (defvar python-shell-interpreter-args "-i")
 (add-hook 'inferior-python-mode-hook (lambda ()
                                        (progn
-                                         (python-shell-send-string-no-output "%load_ext autoreload")
-                                         (python-shell-send-string-no-output "%autoreload 2"))))
+                                         (python-shell-send-string "%load_ext autoreload")
+                                         (python-shell-send-string "%autoreload 2"))))
+
+
+(defun python-test-project()
+  "Run default Python unit test command."
+  (interactive)
+  (when (eq major-mode 'python-mode)
+    (setq projectile-project-test-cmd "python -m unittest")
+    (setq compilation-read-command nil)
+    (projectile-test-project nil)))
+
+
+(defun python-toggle-test-on-save()
+  "Toggle whether projectile-test-project is run on saving a Python file."
+  (interactive)
+  (if (bound-and-true-p python-test-on-save)
+      (progn
+        ;; Turn off saving if python-test-on-save is true
+        (setq python-test-on-save nil)
+        (remove-hook 'after-save-hook 'python-test-project)
+        (message "Test on save unset."))
+    ;; Turn on saving if python-test-on-save is false
+    (setq python-test-on-save t)
+    (add-hook 'after-save-hook 'python-test-project)
+    (message "Test on save set.")))
+
 
 (defun python-send-buffer-args (args)
   "Run Python script with ARGS as arguments."
