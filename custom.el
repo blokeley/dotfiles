@@ -3,6 +3,11 @@
 ;;; init routine for Emacs
 
 ;;; Code:
+(require 'cl-lib)
+(require 'projectile)
+(require 'python)
+
+
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -24,8 +29,8 @@
 
 ;; Start emacs maximized on Windows. If using X Windows, try starting emacs
 ;;  with 'emacs -mm'
-(when (eq system-type 'windows-nt)
-    (w32-send-sys-command 61488))
+;; (when (eq system-type 'windows-nt)
+    ;; (w32-send-sys-command 61488))
 
 
 ;; Enable line numbers
@@ -84,30 +89,28 @@ The function inserts linebreaks
 to separate tags that have nothing but whitespace between them.
 It then indents the markup by using nxml's indentation rules."
   (interactive "r")
-  (require 'cl)
   (save-excursion
     (nxml-mode)
     (goto-char begin)
     ;; split <foo><foo> or </foo><foo>, but not <foo></foo>
     (while (search-forward-regexp ">[ \t]*<[^/]" end t)
-      (backward-char 2) (insert "\n") (incf end))
+      (backward-char 2) (insert "\n") (cl-incf end))
     ;; split <foo/></foo> and </foo></foo>
     (goto-char begin)
     (while (search-forward-regexp "<.*?/.*?>[ \t]*<" end t)
-      (backward-char) (insert "\n") (incf end))
+      (backward-char) (insert "\n") (cl-incf end))
     (indent-region begin end nil)
     (normal-mode))
   (message "XML indented"))
 
 
 ;; Set IPython interpreter
-(require 'python)
 (defvar python-shell-interpreter "ipython")
 (defvar python-shell-interpreter-args "-i")
 (add-hook 'inferior-python-mode-hook (lambda ()
                                        (progn
                                          (python-shell-send-string "%load_ext autoreload")
-                                         (python-shell-send-string "%autoreload 2"))))
+                                         (python-shell-send-string "%autoreload 2\n"))))
 
 
 (defun python-test-project()
@@ -141,14 +144,15 @@ It then indents the markup by using nxml's indentation rules."
     (with-temp-buffer
       (insert "import sys; sys.argv = '''" args "'''.split()\n")
       (insert-buffer-substring source-buffer)
-      (python-send-buffer))))
+      (python-shell-send-buffer))))
 
 
 (defun python-shell-repeat ()
   "Repeat the last command in the Python shell."
   (switch-to-buffer-other-window "*Python*")
   (goto-char (point-max))
-  (comint-previous-input)
+  ;; Go one input item backwards
+  (comint-previous-input 1)
   (insert "\n"))
 
 
