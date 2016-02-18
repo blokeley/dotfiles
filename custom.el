@@ -69,7 +69,7 @@ name at the end of your .emacs"
      (switch-to-buffer nil))               ; return to the initial buffer
 
 
-(defun clean-text()
+(defun clean-text ()
   "Yank text from the clipboard/killring, replace newlines with spaces,
    and copy to clipboard."
   (interactive)
@@ -109,11 +109,11 @@ It then indents the markup by using nxml's indentation rules."
 (defvar python-shell-interpreter-args "-i")
 (add-hook 'inferior-python-mode-hook (lambda ()
                                        (progn
-                                         (python-shell-send-string "%load_ext autoreload")
+                                         (python-shell-send-string "%load_ext autoreload\n")
                                          (python-shell-send-string "%autoreload 2\n"))))
 
 
-(defun python-test-project()
+(defun python-test-project ()
   "Run default Python unit test command."
   (interactive)
   (when (eq major-mode 'python-mode)
@@ -122,19 +122,23 @@ It then indents the markup by using nxml's indentation rules."
     (projectile-test-project nil)))
 
 
-(defun python-toggle-test-on-save()
+(defun python-toggle-test-on-save ()
   "Toggle whether projectile-test-project is run on saving a Python file."
   (interactive)
-  (if (bound-and-true-p python-test-on-save)
+  ;; Create a 'state' property for the function object to save state
+  (if (get 'python-toggle-test-on-save 'state)
       (progn
         ;; Turn off saving if python-test-on-save is true
-        (setq python-test-on-save nil)
+        (put 'python-toggle-test-on-save 'state nil)
         (remove-hook 'after-save-hook 'python-test-project)
         (message "Test on save unset."))
     ;; Turn on saving if python-test-on-save is false
-    (setq python-test-on-save t)
+    (put 'python-toggle-test-on-save 'state t)
     (add-hook 'after-save-hook 'python-test-project)
     (message "Test on save set.")))
+
+
+(python-toggle-test-on-save)
 
 
 (defun python-send-buffer-args (args)
