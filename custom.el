@@ -108,10 +108,13 @@ It then indents the markup by using nxml's indentation rules."
 ;; Require Python after the interpreter variables are set so we don't
 ;; have to use setq on a free global variable
 (require 'python)
-(add-hook 'inferior-python-mode-hook (lambda ()
-                                       (progn
-                                         (python-shell-send-string "%load_ext autoreload\n")
-                                         (python-shell-send-string "%autoreload 2\n"))))
+
+(defun python-shell-autoreload ()
+  "Autoreload Python modules in Python inferior shell."
+  (interactive)
+  (python-shell-send-string-no-output "%load_ext autoreload\n")
+  (python-shell-send-string-no-output "%autoreload 2\n")
+  (python-shell-switch-to-shell))
 
 
 (defun python-test-project ()
@@ -137,7 +140,6 @@ It then indents the markup by using nxml's indentation rules."
     (put 'python-toggle-test-on-save 'state t)
     (add-hook 'after-save-hook 'python-test-project)
     (message "Test on save set.")))
-
 
 (python-toggle-test-on-save)
 
