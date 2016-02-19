@@ -5,7 +5,6 @@
 ;;; Code:
 (require 'cl-lib)
 (require 'projectile)
-(require 'python)
 
 
 (custom-set-variables
@@ -33,7 +32,7 @@
     ;; (w32-send-sys-command 61488))
 
 
-;; Enable line numbers
+;; Enable line numbers in files (but not shells etc.)
 (add-hook 'find-file-hook (lambda () (linum-mode 1)))
 
 
@@ -42,7 +41,7 @@
 
 
 (defun comment-or-uncomment-region-or-line ()
-  "Comment or uncomment the region or the current line if there's no active region."
+  "Comment or uncomment the region or the current line if region not active."
   (interactive)
   (let (beg end)
     (if (region-active-p)
@@ -58,20 +57,19 @@
 (defun save-macro (name)
   "Save a macro.
 Take a NAME as argument and save the last defined macro under
-name at the end of your .emacs"
+NAME at the end of your .emacs"
      (interactive "SName of the macro :")  ; ask for the name of the macro
      (kmacro-name-last-macro name)         ; use this name for the macro
-     (find-file user-init-file)            ; open ~/.emacs or other user init file
-     (goto-char (point-max))               ; go to the end of the .emacs
-     (newline)                             ; insert a newline
-     (insert-kbd-macro name)               ; copy the macro
-     (newline)                             ; insert a newline
-     (switch-to-buffer nil))               ; return to the initial buffer
+     (save-excursion                       ; return to this buffer later
+       (find-file user-init-file)            ; open ~/.emacs or other init file
+       (goto-char (point-max))               ; go to the end of the .emacs
+       (newline)                             ; insert a newline
+       (insert-kbd-macro name)               ; copy the macro
+       (newline)))                           ; insert a newline
 
 
 (defun clean-text ()
-  "Yank text from the clipboard/killring, replace newlines with spaces,
-   and copy to clipboard."
+  "Yank text from the killring, replace newlines with spaces, and copy to killring."
   (interactive)
   (with-temp-buffer
     (yank) ; Yank (paste) contents of clipboard
@@ -107,6 +105,9 @@ It then indents the markup by using nxml's indentation rules."
 ;; Set IPython interpreter
 (defvar python-shell-interpreter "ipython")
 (defvar python-shell-interpreter-args "-i")
+;; Require Python after the interpreter variables are set so we don't
+;; have to use setq on a free global variable
+(require 'python)
 (add-hook 'inferior-python-mode-hook (lambda ()
                                        (progn
                                          (python-shell-send-string "%load_ext autoreload\n")
